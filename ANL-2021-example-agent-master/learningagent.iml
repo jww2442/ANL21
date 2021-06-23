@@ -23,6 +23,8 @@
     <orderEntry type="library" name="Maven: geniusweb:bidspace:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: geniusweb:profileconnection:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: javax.websocket:javax.websocket-api:1.1" level="project" />
+    <orderEntry type="library" name="Maven: geniusweb:boa:1.6.0" level="project" />
+    <orderEntry type="library" name="Maven: geniusweb:opponentmodel:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: tudelft.utilities:logging:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: tudelft.utilities:immutablelist:1.1.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" level="project" />
