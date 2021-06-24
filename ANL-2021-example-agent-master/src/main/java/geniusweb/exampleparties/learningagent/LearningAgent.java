@@ -230,18 +230,21 @@ public class LearningAgent extends DefaultBoa { // TODO: change name
     protected Class<? extends OpponentModel> getOpponentModel(Settings settings)
             throws InstantiationFailedException {
         return FrequencyOpponentModel.class; //TODO: Choose an Opponent Model
+        //return LearningAgentOpponentModel.class;
     }
 
     @Override
     protected BiddingStrategy getBiddingStrategy(Settings settings)
             throws InstantiationFailedException {
         return new TimeDependentBiddingStrategy(); //TODO: Choose a Bidding Strategy
+        //return new LearningAgentBiddingStrategy();
     }
 
     @Override
     protected AcceptanceStrategy getAccceptanceStrategy(Settings settings)
             throws InstantiationFailedException {
         return new TimeDependentAcceptanceStrategy(); //TODO: Choose an Acceptance Strategy
+        //return new LearningAgentAcceptanceStrategy();
     }
 
     /**

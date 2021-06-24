@@ -1,3 +1,4 @@
-C:\Users\Jacob Brue\IdeaProjects\GeniusWeb\ANL-2021-example-agent-master\src\main\java\geniusweb\exampleparties\learningagent\PersistentState.java
-C:\Users\Jacob Brue\IdeaProjects\GeniusWeb\ANL-2021-example-agent-master\src\main\java\geniusweb\exampleparties\learningagent\NegotiationData.java
-C:\Users\Jacob Brue\IdeaProjects\GeniusWeb\ANL-2021-example-agent-master\src\main\java\geniusweb\exampleparties\learningagent\LearningAgent.java
+/root/src/main/java/geniusweb/exampleparties/learningagent/LearningAgent.java
+/root/src/main/java/geniusweb/exampleparties/learningagent/NegotiationData.java
+/root/src/main/java/geniusweb/exampleparties/learningagent/LearningAgentBiddingStrategy.java
+/root/src/main/java/geniusweb/exampleparties/learningagent/PersistentState.java

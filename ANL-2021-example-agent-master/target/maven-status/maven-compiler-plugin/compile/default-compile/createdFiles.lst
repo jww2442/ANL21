@@ -1,3 +1,2 @@
-geniusweb\exampleparties\learningagent\PersistentState.class
-geniusweb\exampleparties\learningagent\LearningAgent.class
-geniusweb\exampleparties\learningagent\NegotiationData.class
+geniusweb\exampleparties\learningagent\LearningAgentOpponentModel.class
+geniusweb\exampleparties\learningagent\LearningAgentAcceptanceStrategy.class
