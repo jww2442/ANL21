@@ -1,0 +1,17 @@
+- deadline: 2.0
+  parties:
+    - params: {}
+      party_path: parties/boulware-1.6.0-jar-with-dependencies.jar
+    - params: {}
+      party_path: parties/conceder-1.6.0-jar-with-dependencies.jar
+    - params: {}
+      party_path: parties/hardliner-1.6.0-jar-with-dependencies.jar
+    - params: {}
+      party_path: parties/linear-1.6.0-jar-with-dependencies.jar
+    - params: {}
+      party_path: parties/randomparty-1.6.0-jar-with-dependencies.jar
+  domains:
+    - - "profiles/fitness/fitness1.json"
+      - "profiles/fitness/fitness2.json"
+    - - "profiles/japantrip/japantrip1.json"
+      - "profiles/japantrip/japantrip2.json"
