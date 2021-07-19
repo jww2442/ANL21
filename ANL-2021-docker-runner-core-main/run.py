@@ -28,7 +28,7 @@ def main():
     for id, session_data in enumerate(settings):
         session = Session(session_data)
         with open("results/myReport.txt", "a") as test_report:
-            test_report.writelines([str(id+1)])
+            test_report.writelines([str(id+1) + "\n"])
         session.execute()
         session.post_process(id)
 
