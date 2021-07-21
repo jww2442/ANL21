@@ -19,6 +19,7 @@ class Session:
         session_data = next(iter(session_data.values()))
 
         participants = []
+        self.tags = []
         for party in session_data["parties"]:
             self.profiles.append(party["profile"])
             participants.append(
@@ -38,6 +39,8 @@ class Session:
                     }
                 }
             )
+            self.tags.append(party["parameters"]["tag"] if "tag" in party["parameters"]
+                        else "") 
 
         self.settings = {
             "LearnSettings"
@@ -78,6 +81,10 @@ class Session:
 
     def add_utilities_to_results(self, results):
         results = results["SAOPState"]
+        tags_map = {}
+        for i, name in enumerate(results["connections"]):
+            tags_map[name] = self.tags[i] or ""
+        results["tags"] = tags_map
 
         if not results["actions"]:
             print(
@@ -89,6 +96,8 @@ class Session:
                 k: UtilitySpace(v["profile"])
                 for k, v in results["partyprofiles"].items()
             }
+            for k, v in results["partyprofiles"].items():
+                results["partyprofiles"][k]["party"]["partyref"] += tags_map[k]
             for action in results["actions"]:
                 if "offer" in action:
                     offer = action["offer"]
@@ -97,7 +106,8 @@ class Session:
                 else:
                     continue
 
+                offer["actor"] += tags_map[offer["actor"]]
                 bid = offer["bid"]["issuevalues"]
                 offer["utilities"] = {
-                    k: v.get_utility(bid) for k, v in utility_spaces.items()
+                    (k + tags_map[k]): v.get_utility(bid) for k, v in utility_spaces.items()
                 }
