@@ -29,13 +29,13 @@ class agent:
 		self.agreements[opp_name].append(agreement)
 
 	def match_count(self):
-		return np.sum([len(x) for x in list(self.agreements.values())])
+		return np.sum(np.array([len(x) for x in list(self.agreements.values())]))
 
 	def avg_self_util(self):
-		return np.average(list(self.utils.values()))
+		return np.average([j for i in self.utils.values() for j in i])
 
 	def avg_opp_util(self):
-		return np.average(list(self.opp_utils.values()))
+		return np.average([j for i in self.opp_utils.values() for j in i])
 
 	def percent_agreement(self):
 		agreements = np.sum([x.count(True) for x in list(self.agreements.values())])
@@ -78,10 +78,10 @@ class profile:
 		return np.sum([len(x) for x in list(self.agreements.values())])
 
 	def avg_self_util(self):
-		return np.average(list(self.utils.values()))
+		return np.average([j for i in self.utils.values() for j in i])
 
 	def avg_opp_util(self):
-		return np.average(list(self.opp_utils.values()))
+		return np.average([j for i in self.opp_utils.values() for j in i])
 
 	def percent_agreement(self):
 		agreements = np.sum([x.count(True) for x in list(self.agreements.values())])
@@ -252,18 +252,18 @@ def main():
 
 	for a in agents.values():
 		print(a.name)
-		print(a.avg_self_util())
-		print(a.avg_opp_util())
-		print(a.percent_agreement())
+		print("avg util: " + str(a.avg_self_util()))
+		print("avg opp util: " + str(a.avg_opp_util()))
+		print("percent agree: " + str(a.percent_agreement()))
 		print()
 
 	print()
 	for d in domains.values():
 		for p in d.profiles.values():
 			print(p.name)
-			print(p.avg_self_util())
-			print(p.avg_opp_util())
-			print(p.percent_agreement())
+			print("avg util: " + str(p.avg_self_util()))
+			print("avg opp util: " + str(p.avg_opp_util()))
+			print("percent agree: " + str(p.percent_agreement()))
 			print()
 		print()
 
