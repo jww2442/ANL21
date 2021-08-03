@@ -7,6 +7,7 @@ import geniusweb.issuevalue.Bid;
 import geniusweb.issuevalue.Value;
 import geniusweb.profile.utilityspace.LinearAdditive;
 import geniusweb.profile.utilityspace.UtilitySpace;
+import tudelft.utilities.immutablelist.FixedList;
 import tudelft.utilities.immutablelist.ImmutableList;
 
 import java.math.BigDecimal;
@@ -117,6 +118,53 @@ public class BidChooser {
         BigDecimal min = minUtility.min(BigDecimal.ONE);
         BigDecimal max = maxUtility.max(minUtility.add(toleranceGuess)).min(BigDecimal.ONE);
         return bidutils.getBids(new Interval(min, max));
+    }
+
+    public ImmutableList<Bid> getBids(BigDecimal goalUtility, BigInteger count) {
+        BigDecimal min = goalUtility.min(BigDecimal.ONE);
+        BigDecimal max = goalUtility.add(toleranceGuess).min(BigDecimal.ONE);
+        ImmutableList<Bid> theBids = null;
+        boolean widestBounds = false;
+        boolean enoughBids = false;
+        do {
+            theBids = getBids(min, max);
+            min = min.add(toleranceGuess);
+            if(min.compareTo(BigDecimal.ONE) > 0.0){
+                min = BigDecimal.ONE;
+                max = max.subtract(toleranceGuess);
+            }
+            enoughBids = theBids != null && theBids.size().intValue() >= count.intValue();
+            widestBounds = (min.compareTo(BigDecimal.ZERO) == 0.0 && max.compareTo(BigDecimal.ONE) == 0.0);
+        } while(!enoughBids && !widestBounds);
+
+        BigDecimal modFactor = BigDecimal.ONE.subtract(goalUtility);
+        Comparator<Bid> compareByGoalUtility = new Comparator<Bid>() {
+            @Override
+            public int compare(Bid b1, Bid b2) {
+                BigDecimal b1Effective = utilSpace.getUtility(b1).subtract(goalUtility);
+                if(b1Effective.signum() < 0) {
+                    b1Effective = b1Effective.abs().add(BigDecimal.ONE);
+                }
+                BigDecimal b2Effective = utilSpace.getUtility(b2).subtract(goalUtility);
+                if(b2Effective.signum() < 0) {
+                    b2Effective = b2Effective.abs().add(BigDecimal.ONE);
+                }
+                BigDecimal diff = b1Effective.subtract(b2Effective);
+                return diff.signum();
+            }
+        };
+        List<Bid> sorted = new ArrayList<Bid>();
+        for(Bid b : theBids) {
+            sorted.add(b);
+        }
+        Collections.sort(sorted, compareByGoalUtility);
+
+        if(sorted.size() < count.intValue()) {
+            return new FixedList<Bid>(sorted.subList(0, count.intValue()));
+        }
+        return new FixedList<>(sorted);
+
+
     }
 
     /**

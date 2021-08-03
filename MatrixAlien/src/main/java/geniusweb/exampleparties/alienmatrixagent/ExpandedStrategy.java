@@ -1,9 +1,6 @@
 package geniusweb.exampleparties.alienmatrixagent;
 
 import geniusweb.actions.*;
-import geniusweb.boa.BoaState;
-import geniusweb.boa.biddingstrategy.BiddingStrategy;
-import geniusweb.boa.biddingstrategy.ExtendedUtilSpace;
 import geniusweb.inform.Settings;
 import geniusweb.issuevalue.Bid;
 import geniusweb.profile.Profile;
@@ -11,13 +8,11 @@ import geniusweb.profile.utilityspace.LinearAdditive;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 import java.util.logging.Level;
 
-import geniusweb.boa.biddingstrategy.TimeDependentBiddingStrategy;
 import geniusweb.profile.utilityspace.UtilitySpace;
 import geniusweb.progress.Progress;
-import tudelft.utilities.immutablelist.ImmutableList;
 import tudelft.utilities.logging.Reporter;
 
 public class ExpandedStrategy {
@@ -29,12 +24,15 @@ public class ExpandedStrategy {
     private Profile profile;
     private Reporter reporter;
 
-    private Double e, k, min, max; // min, max attainable utility
+    private Double e, k, min, max; // e=bouleware constant / k=part of range (not utilitzed) / min, max= bounds of boulware curve
+    private Double startMean, endMean, startSigma, endSigma; // / / startSigma=start stdev / endSigma=end stdev
     private BigDecimal goalWeight, selfWeight, oppWeight, exploreWeight, randomWeight;
 
+    private Random r;
 
-    public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter) {
-        init(settings, profile, reporter);
+
+    public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter, Double learnedE) {
+        init(settings, profile, reporter, learnedE);
     }
 
     public void countBid(Bid bid) {
@@ -42,7 +40,7 @@ public class ExpandedStrategy {
     }
 
     public Action getAction(Progress progress, UtilitySpace oppModel) {
-        BigDecimal utilityGoal = BigDecimal.valueOf(p(progress.get(System.currentTimeMillis())));
+        BigDecimal utilityGoal = BigDecimal.valueOf(p(progress.get(System.currentTimeMillis()), true));
 
         Bid pickedBid = bidChooser.chooseBid(utilityGoal, BigDecimal.valueOf(max), utilityGoal, goalWeight, selfWeight, oppWeight, oppModel, exploreWeight, randomWeight);
         return new Offer(me, pickedBid);
@@ -50,19 +48,40 @@ public class ExpandedStrategy {
 
     public Boolean isAcceptable(Bid bid, Progress progress) {
         double targetUtil = p(
-                progress.get(System.currentTimeMillis()));
+                progress.get(System.currentTimeMillis()), false);
         // we subtract epsilon because of rounding errors in computation.
         return ((UtilitySpace) profile).getUtility(bid)
                 .doubleValue() >= targetUtil - 0.0000001;
     }
 
-    private double p(double t) {
-        return this.min + (this.max - this.min) * (1.0 - f(t));
+    private double p(double t, boolean doRandom) {
+        double boulwareCurve = this.min + (this.max - this.min) * (1.0 - f(t));
+        if(!doRandom) {
+            return boulwareCurve;
+        }
+        double randomCurve = boulwareCurve + r.nextGaussian()*std(t)+mean(t);
+        if(randomCurve > max) {
+            randomCurve = max;
+        }
+        if(randomCurve < min) {
+            randomCurve = min;
+        }
+        return randomCurve;
     }
 
     private double f(double t) {
         double ft = k + (1.0 - k) * Math.pow(t, 1.0 / e);
         return ft;
+    }
+
+    private double std(double t){
+        double delta = endSigma - startSigma;
+        return startSigma + delta*t;
+    }
+
+    private double mean(double t){
+        double delta = endMean - startMean;
+        return startMean + delta*t;
     }
 
     private Bid getLastBid(List<Action> history) {
@@ -75,7 +94,7 @@ public class ExpandedStrategy {
         return null;
     }
 
-    private void init(Settings settings, Profile profile, Reporter reporter) {
+    private void init(Settings settings, Profile profile, Reporter reporter, Double learnedE) {
         this.settings = settings;
         this.me = settings.getID();
         this.profile = profile;
@@ -84,9 +103,15 @@ public class ExpandedStrategy {
                     "Requires a LinearAdditive space but got " + profile);
         this.LAprofile = (LinearAdditive) profile;
         this.reporter = reporter;
+        this.r = new Random();
 
         this.bidChooser = getBidChooser(this.LAprofile);
-        this.e = getE();
+        if(learnedE == null) {
+            this.e = getE();
+        }
+        else {
+            this.e = learnedE;
+        }
         this.k = getK();
         this.min = getMin();
         this.max = getMax();
@@ -95,6 +120,10 @@ public class ExpandedStrategy {
         this.oppWeight = getOppWeight();
         this.exploreWeight = getExploreWeight();
         this.randomWeight = getRandomWeight();
+        this.startMean = getStartMean();
+        this.endMean = getEndMean();
+        this.startSigma = getStartSigma();
+        this.endSigma = getEndSigma();
 
         if(reporter != null) {
             reporter.log(Level.INFO,
@@ -117,8 +146,7 @@ public class ExpandedStrategy {
     }
 
     protected Double getMin() {
-        Double val = settings.getParameters().getDouble("min", null,
-                0d, 1d);
+        Double val = settings.getParameters().getDouble("min", null, 0d, 1d);
         if (val != null)
             return val;
         // val=null, try the reservation bid
@@ -159,6 +187,18 @@ public class ExpandedStrategy {
         return BigDecimal.valueOf(settings.getParameters().getDouble("rw", 0d, 0d, 100d));
     }
 
+    protected Double getStartMean() {
+        return settings.getParameters().getDouble("sm", 0d, -1.0, 1.0);
+    }
+    protected Double getEndMean() {
+        return settings.getParameters().getDouble("em", 0d, -1.0, 1.0);
+    }
+    protected Double getStartSigma() {
+        return settings.getParameters().getDouble("ss", 0d, 0d, 10.0);
+    }
+    protected Double getEndSigma() {
+        return settings.getParameters().getDouble("es", 0d, 0d, 10.0);
+    }
 
 
 }
