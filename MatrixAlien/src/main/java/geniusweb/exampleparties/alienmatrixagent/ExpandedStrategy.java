@@ -7,12 +7,14 @@ import geniusweb.profile.Profile;
 import geniusweb.profile.utilityspace.LinearAdditive;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
 import geniusweb.profile.utilityspace.UtilitySpace;
 import geniusweb.progress.Progress;
+import tudelft.utilities.immutablelist.ImmutableList;
 import tudelft.utilities.logging.Reporter;
 
 public class ExpandedStrategy {
@@ -30,9 +32,12 @@ public class ExpandedStrategy {
 
     private Random r;
 
+    private final boolean randBidFromCount = false;
+    private final boolean oppBidFromCount = false;
+    private final int bidChoiceCount = 3;
 
-    public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter, Double learnedE) {
-        init(settings, profile, reporter, learnedE);
+    public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter) {
+        init(settings, profile, reporter);
     }
 
     public void countBid(Bid bid) {
@@ -41,6 +46,23 @@ public class ExpandedStrategy {
 
     public Action getAction(Progress progress, UtilitySpace oppModel) {
         BigDecimal utilityGoal = BigDecimal.valueOf(p(progress.get(System.currentTimeMillis()), true));
+        if(randBidFromCount) {
+            Bid randBid = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount)).get(r.nextInt(bidChoiceCount));
+            return new Offer(me, randBid);
+        }
+        if(oppBidFromCount) {
+            ImmutableList<Bid> bids = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount));
+            Bid bestOppBid = null;
+            BigDecimal bestOppUtil = null;
+            for(Bid bid : bids) {
+                BigDecimal bidOppUtil = oppModel.getUtility(bid);
+                if(bestOppBid == null || bidOppUtil.compareTo(bestOppUtil) > 0.0) {
+                    bestOppBid = bid;
+                    bestOppUtil = bidOppUtil;
+                }
+            }
+            return new Offer(me, bestOppBid);
+        }
 
         Bid pickedBid = bidChooser.chooseBid(utilityGoal, BigDecimal.valueOf(max), utilityGoal, goalWeight, selfWeight, oppWeight, oppModel, exploreWeight, randomWeight);
         return new Offer(me, pickedBid);
@@ -94,7 +116,15 @@ public class ExpandedStrategy {
         return null;
     }
 
-    private void init(Settings settings, Profile profile, Reporter reporter, Double learnedE) {
+    public void init2electricBoogaloo(Double learnedE) {
+        if(learnedE == null) {
+            this.e = 2e-8;
+        } else {
+            this.e = learnedE;
+        }
+    }
+
+    private void init(Settings settings, Profile profile, Reporter reporter) {
         this.settings = settings;
         this.me = settings.getID();
         this.profile = profile;
@@ -106,12 +136,7 @@ public class ExpandedStrategy {
         this.r = new Random();
 
         this.bidChooser = getBidChooser(this.LAprofile);
-        if(learnedE == null) {
-            this.e = getE();
-        }
-        else {
-            this.e = learnedE;
-        }
+        this.e = 2e-8;
         this.k = getK();
         this.min = getMin();
         this.max = getMax();
