@@ -30,38 +30,56 @@ public class ExpandedStrategy {
     private Double startMean, endMean, startSigma, endSigma; // / / startSigma=start stdev / endSigma=end stdev
     private BigDecimal goalWeight, selfWeight, oppWeight, exploreWeight, randomWeight;
 
+    private Bid bestBidFromOpp = null;
+    private BigDecimal bestUtilFromOpp = BigDecimal.ZERO;
     private Random r;
 
     private final boolean randBidFromCount = false;
-    private final boolean oppBidFromCount = false;
+    private final boolean oppBidFromCount = true;
     private final int bidChoiceCount = 3;
 
     public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter) {
         init(settings, profile, reporter);
     }
 
-    public void countBid(Bid bid) {
-        bidChooser.countBid(bid);
+    public void countBid(Bid bid, boolean fromOpponent) {
+        bidChooser.countBid(bid); //Potentially space or time expensive?
+
+        if(fromOpponent) {
+            BigDecimal util = LAprofile.getUtility(bid);
+            if(util.compareTo(bestUtilFromOpp) > 0.0){
+                bestBidFromOpp = bid;
+                bestUtilFromOpp = util;
+            }
+        }
     }
 
     public Action getAction(Progress progress, UtilitySpace oppModel) {
         BigDecimal utilityGoal = BigDecimal.valueOf(p(progress.get(System.currentTimeMillis()), true));
+        if(utilityGoal.compareTo(bestUtilFromOpp) < 0.0) {
+            return new Offer(me, bestBidFromOpp);
+        }
         if(randBidFromCount) {
             Bid randBid = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount)).get(r.nextInt(bidChoiceCount));
             return new Offer(me, randBid);
         }
         if(oppBidFromCount) {
             ImmutableList<Bid> bids = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount));
-            Bid bestOppBid = null;
-            BigDecimal bestOppUtil = null;
+            if(oppModel == null) {
+                return new Offer(me, bids.iterator().next());
+            }
+
+            Bid bestBidForOpp = null;
+            BigDecimal bestUtilForOpp = null;
+
             for(Bid bid : bids) {
                 BigDecimal bidOppUtil = oppModel.getUtility(bid);
-                if(bestOppBid == null || bidOppUtil.compareTo(bestOppUtil) > 0.0) {
-                    bestOppBid = bid;
-                    bestOppUtil = bidOppUtil;
+                if(bestBidForOpp == null || bidOppUtil.compareTo(bestUtilForOpp) > 0.0) {
+                    bestBidForOpp = bid;
+                    bestUtilForOpp = bidOppUtil;
                 }
             }
-            return new Offer(me, bestOppBid);
+            return new Offer(me, bestBidForOpp);
         }
 
         Bid pickedBid = bidChooser.chooseBid(utilityGoal, BigDecimal.valueOf(max), utilityGoal, goalWeight, selfWeight, oppWeight, oppModel, exploreWeight, randomWeight);
@@ -118,7 +136,7 @@ public class ExpandedStrategy {
 
     public void init2electricBoogaloo(Double learnedE) {
         if(learnedE == null) {
-            this.e = 2e-8;
+            this.e = getE();
         } else {
             this.e = learnedE;
         }
@@ -136,7 +154,7 @@ public class ExpandedStrategy {
         this.r = new Random();
 
         this.bidChooser = getBidChooser(this.LAprofile);
-        this.e = 2e-8;
+        this.e = getE();
         this.k = getK();
         this.min = getMin();
         this.max = getMax();

@@ -128,10 +128,10 @@ public class BidChooser {
         boolean enoughBids = false;
         do {
             theBids = getBids(min, max);
-            min = min.add(toleranceGuess);
-            if(min.compareTo(BigDecimal.ONE) > 0.0){
-                min = BigDecimal.ONE;
-                max = max.subtract(toleranceGuess);
+            max = max.add(toleranceGuess);
+            if(max.compareTo(BigDecimal.ONE) > 0.0){
+                max = BigDecimal.ONE;
+                min = min.subtract(toleranceGuess).max(BigDecimal.ZERO);
             }
             enoughBids = theBids != null && theBids.size().intValue() >= count.intValue();
             widestBounds = (min.compareTo(BigDecimal.ZERO) == 0.0 && max.compareTo(BigDecimal.ONE) == 0.0);

@@ -58,6 +58,8 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
     private Reporter reporter;
 
+    private final boolean doLearnE = false;
+
     public MatrixAlienAgent() { // TODO: change name
     }
 
@@ -154,7 +156,7 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
                 newactions.add(action);
                 actionHistory = newactions;
                 if(action instanceof Offer) {
-                    expandedStrategy.countBid(((Offer) action).getBid()); //Regardless of who offers the bid.
+                    expandedStrategy.countBid(((Offer) action).getBid(), !this.me.equals(action.getActor())); //Regardless of who offers the bid.
                 }
 
                 // Check if this is not our own action
@@ -170,7 +172,12 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
                         // Add name of the opponent to the negotiation data
                         this.negotiationData.setOpponentName(this.opponentName);
                         updateModels(action);
-                        expandedStrategy.init2electricBoogaloo(persistentState.getOpponentEVal(opponentName));
+                        if(doLearnE) {
+                            expandedStrategy.init2electricBoogaloo(persistentState.getOpponentEVal(opponentName));
+                        }
+                        else {
+                            expandedStrategy.init2electricBoogaloo(null);
+                        }
 
                     }
                     // Process the action of the opponent.
