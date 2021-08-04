@@ -17,6 +17,42 @@ public class NegotiationData {
     private Double agreementUtil = 0.0;
     private String opponentName;
 
+    private Double eVal = 2.0e-8;
+    private Double timeTakenToAgree = -1.0;
+    private int numEncounters = 0;
+
+    public void multeVal(){
+        if(this.agreementUtil >90.0) {
+            ;
+        }else if(this.agreementUtil > 0.0 && this.agreementUtil <= 90.0) {
+            double timeLeft = 60 * (1.0 - timeTakenToAgree);
+            for (int i = 0; i < timeLeft; i++) {
+                this.eVal *= 0.95;
+            }
+            for(int i = 0; i < numEncounters; i++){
+                this.eVal *= 1.005;
+            }
+        } else if(this.agreementUtil == 0.0){
+            this.eVal *= 10;
+            for(int i = 0; i < numEncounters; i++){
+                this.eVal *= 1.005;
+            }
+        }
+
+    }
+
+    public void setNumEncounters(int num){
+        this.numEncounters = num;
+    }
+
+    public void setTimeTaken(Double timeTaken){
+        this.timeTakenToAgree = timeTaken;
+    }
+
+    public void seteVal(Double eval){
+        this.eVal = eval;
+    }
+
     public void addAgreementUtil(Double agreementUtil) {
         this.agreementUtil = agreementUtil;
         if (agreementUtil > maxReceivedUtil)
@@ -34,6 +70,10 @@ public class NegotiationData {
 
     public String getOpponentName() {
         return this.opponentName;
+    }
+
+    public Double geteVal(){
+        return this.eVal;
     }
 
     public Double getMaxReceivedUtil() {

@@ -1,7 +1,6 @@
 package geniusweb.exampleparties.alienmatrixagent; // TODO: change name
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -9,12 +8,6 @@ import java.util.logging.Level;
 import geniusweb.actions.*;
 
 import geniusweb.actions.Action;
-import geniusweb.boa.acceptancestrategy.AcceptanceStrategy;
-import geniusweb.boa.acceptancestrategy.TimeDependentAcceptanceStrategy;
-import geniusweb.boa.biddingstrategy.BiddingStrategy;
-import geniusweb.boa.biddingstrategy.TimeDependentBiddingStrategy;
-import geniusweb.exampleparties.alienmatrixagent.OurStochasticAcceptanceStrategy;
-import geniusweb.exampleparties.alienmatrixagent.OurStochasticBiddingStrategy;
 import geniusweb.inform.ActionDone;
 import geniusweb.inform.Agreements;
 import geniusweb.inform.Finished;
@@ -38,8 +31,6 @@ import tudelft.utilities.logging.Reporter;
 import geniusweb.boa.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import javax.swing.*;
 
 public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
@@ -179,6 +170,8 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
                         // Add name of the opponent to the negotiation data
                         this.negotiationData.setOpponentName(this.opponentName);
                         updateModels(action);
+                        expandedStrategy.init2electricBoogaloo(persistentState.getOpponentEVal(opponentName));
+
                     }
                     // Process the action of the opponent.
                     processAction(action);
@@ -286,20 +279,6 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
         //return SmallTimeIndependentFreqModel.class;
     }
 
-    protected BiddingStrategy getBiddingStrategy(Settings settings)
-            throws InstantiationFailedException {
-        //return new TimeDependentBiddingStrategy(); //TODO: Choose a Bidding Strategy
-        return new OurTimeDependentBiddingStrategy();
-        //return new OurStochasticBiddingStrategy();
-    }
-
-    protected AcceptanceStrategy getAccceptanceStrategy(Settings settings)
-            throws InstantiationFailedException {
-        //return new TimeDependentAcceptanceStrategy(); //TODO: Choose an Acceptance Strategy
-        return new OurTimeDependentAcceptanceStrategy();
-        //return new OurStochasticAcceptanceStrategy();
-    }
-
     protected ExpandedStrategy getExpandedStrategy(Settings settings, Profile profile, Reporter reporter) {
         return new ExpandedStrategy(settings, profile, reporter);
     }
@@ -325,6 +304,22 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
      * @param agreements
      */
     private void processAgreements(Agreements agreements) {
+
+        //pass eval from p-state to neg-data
+        Double eval = persistentState.getOpponentEVal(opponentName);
+        if(eval == null){
+            this.negotiationData.seteVal(2e-8);
+        } else {
+            this.negotiationData.seteVal(eval);
+        }
+
+        Integer encounters = persistentState.getOpponentEncounters(opponentName);
+        if(encounters == null){
+            this.negotiationData.setNumEncounters(0);
+        } else {
+            this.negotiationData.setNumEncounters(encounters);
+        }
+
         // Check if we reached an agreement (walking away or passing the deadline
         // results in no agreement)
         if (!agreements.getMap().isEmpty()) {
@@ -332,6 +327,9 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
             Bid agreement = agreements.getMap().values().iterator().next();
             this.negotiationData.addAgreementUtil(this.utilitySpace.getUtility(agreement).doubleValue());
         }
+
+        this.negotiationData.setTimeTaken(settings.getProgress().get(System.currentTimeMillis()));
+        this.negotiationData.multeVal();
     }
 
     /**
@@ -366,12 +364,12 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
     }
 
     private void updateModels(Action action)
-        throws InstantiationFailedException {
-            PartyId actor = action.getActor();
-            Map<PartyId, OpponentModel> updated = extendedOpponentModels(actor);
-            updated.put(actor, updated.get(actor).with(action, progress));
-            opponentModels = updated;
-        }
+            throws InstantiationFailedException {
+        PartyId actor = action.getActor();
+        Map<PartyId, OpponentModel> updated = extendedOpponentModels(actor);
+        updated.put(actor, updated.get(actor).with(action, progress));
+        opponentModels = updated;
+    }
 
     /**
      * Get the current opponent model, extended with newparty if there is no
@@ -384,21 +382,21 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
      * @throws InstantiationFailedException
      */
     private Map<PartyId, OpponentModel> extendedOpponentModels(PartyId newparty)
-                    throws InstantiationFailedException {
-            // check if this is new party
-            if (opponentModels.containsKey(newparty))
-                    return opponentModels;
+            throws InstantiationFailedException {
+        // check if this is new party
+        if (opponentModels.containsKey(newparty))
+            return opponentModels;
 
-            Map<PartyId, OpponentModel> newmodels = new HashMap<>(opponentModels);
-            OpponentModel newmodel;
-            try {
-                    newmodel = opModelClass.getDeclaredConstructor().newInstance()
-                                    .with(profile.getDomain(), profile.getReservationBid());
-            } catch (Exception e) {
-                    throw new InstantiationFailedException(
-                                    "Failed to instantiate " + opModelClass, e);
-            }
-            newmodels.put(newparty, newmodel);
-            return newmodels;
+        Map<PartyId, OpponentModel> newmodels = new HashMap<>(opponentModels);
+        OpponentModel newmodel;
+        try {
+            newmodel = opModelClass.getDeclaredConstructor().newInstance()
+                    .with(profile.getDomain(), profile.getReservationBid());
+        } catch (Exception e) {
+            throw new InstantiationFailedException(
+                    "Failed to instantiate " + opModelClass, e);
+        }
+        newmodels.put(newparty, newmodel);
+        return newmodels;
     }
 }

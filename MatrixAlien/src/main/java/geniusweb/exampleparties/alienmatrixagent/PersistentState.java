@@ -20,6 +20,7 @@ public class PersistentState {
     private Integer negotiations = 0;
     private Map<String, Double> avgMaxUtilityOpponent = new HashMap<String, Double>();
     private Map<String, Integer> opponentEncounters = new HashMap<String, Integer>();
+    private Map<String, Double> eVals = new HashMap<String, Double>();
 
     /**
      * Update the persistent state with a negotiation data of a previous negotiation
@@ -49,7 +50,16 @@ public class PersistentState {
             Double avgUtil = avgMaxUtilityOpponent.containsKey(opponent) ? avgMaxUtilityOpponent.get(opponent) : 0.0;
             avgMaxUtilityOpponent.put(opponent,
                     (avgUtil * encounters + negotiationData.getMaxReceivedUtil()) / (encounters + 1));
+
+            eVals.put(opponent, negotiationData.geteVal());
         }
+    }
+
+    public Double getOpponentEVal(String opponent){
+        if(eVals.containsKey(opponent)) {
+            return eVals.get(opponent);
+        }
+        return 2e-8d;
     }
 
     public Double getAvgMaxUtility(String opponent) {
