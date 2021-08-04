@@ -120,7 +120,7 @@ public class BidChooser {
         return bidutils.getBids(new Interval(min, max));
     }
 
-    public ImmutableList<Bid> getBids(BigDecimal goalUtility, BigInteger count) {
+    public ImmutableList<Bid> getCountBids(BigDecimal goalUtility, BigInteger count) {
         BigDecimal min = goalUtility.min(BigDecimal.ONE);
         BigDecimal max = goalUtility.add(toleranceGuess).min(BigDecimal.ONE);
         ImmutableList<Bid> theBids = null;
@@ -163,8 +163,6 @@ public class BidChooser {
             return new FixedList<Bid>(sorted.subList(0, count.intValue()));
         }
         return new FixedList<>(sorted);
-
-
     }
 
     /**
