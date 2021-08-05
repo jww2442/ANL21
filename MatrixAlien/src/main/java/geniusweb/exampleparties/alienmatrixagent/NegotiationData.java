@@ -93,6 +93,10 @@ public class NegotiationData {
         this.eVal = eval;
     }
 
+    public void setMinVal(Double minval){
+        this.minVal = minval;
+    }
+
     public void addAgreementUtil(Double agreementUtil) {
         this.agreementUtil = agreementUtil;
         if (agreementUtil > maxReceivedUtil)

@@ -321,9 +321,15 @@ public class MatrixAlienAgent extends DefaultParty {
         //pass eval from p-state to neg-data
         Double eval = persistentState.getOpponentEVal(opponentName);
         if(eval == null){
-            this.negotiationData.seteVal(2e-8);
+            this.negotiationData.seteVal(this.initial_E);
         } else {
             this.negotiationData.seteVal(eval);
+        }
+        Double min = persistentState.getOpponentMinVal(opponentName);
+        if(min == null){
+            this.negotiationData.setMinVal(this.initial_min);
+        } else {
+            this.negotiationData.setMinVal(min);
         }
 
         Integer encounters = persistentState.getOpponentEncounters(opponentName);
