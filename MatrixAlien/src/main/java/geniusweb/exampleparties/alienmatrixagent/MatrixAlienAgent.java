@@ -50,7 +50,6 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
     private String opponentName;
 
     private Class<? extends OpponentModel> opModelClass;
-    private Map<PartyId, OpponentModel> opponentModels;
     private ExpandedStrategy expandedStrategy;
     private List<Action> actionHistory;
     private Profile profile;
@@ -58,7 +57,10 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
     private Reporter reporter;
 
-    private final boolean doLearnE = false;
+    private final boolean doLearnE = true;
+    private final boolean doLearnMin = true;
+    public static final Double initial_E = 1.0;
+    public static final Double initial_min = 0.4;
 
     public MatrixAlienAgent() { // TODO: change name
     }
@@ -87,7 +89,6 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
                 Class<? extends OpponentModel> omClass = getOpponentModel(settings);
                 opModelClass = omClass;
-                opponentModels = new HashMap<>();
                 actionHistory = new ArrayList<>();
 
 
@@ -171,18 +172,24 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
                         // Add name of the opponent to the negotiation data
                         this.negotiationData.setOpponentName(this.opponentName);
-                        updateModels(action);
+
                         if(doLearnE) {
                             expandedStrategy.init2electricBoogaloo(persistentState.getOpponentEVal(opponentName));
+
                         }
                         else {
                             expandedStrategy.init2electricBoogaloo(null);
+                        }
+                        if(doLearnMin){
+                            expandedStrategy.init3(persistentState.getOpponentMinVal(opponentName));
+                        } else {
+                            expandedStrategy.init3(null);
                         }
 
                     }
                     // Process the action of the opponent.
                     processAction(action);
-                    updateModels(action);
+
                 }
                 else { //OUR ACTIONDONE**********OUR ACTIONDONE**************OUR ACTIONDONE**************
                     //This is action we have done
@@ -231,13 +238,8 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
         if(lastBid != null && expandedStrategy.isAcceptable(lastBid, progress)) {
             return new Accept(me, lastBid);
         }
-        UtilitySpace opponentModel = (UtilitySpace) opponentModels.get(them);
-        try {
-            opponentModels = extendedOpponentModels(them);
-        } catch(InstantiationFailedException e) {
-            throw new RuntimeException("Failed to Instantiate new opponent model", e);
-        }
-        return expandedStrategy.getAction(progress, opponentModel); //Should be ok if we use only UtilitySpace Opponent Models
+
+        return expandedStrategy.getAction(progress, null); //Should be ok if we use only UtilitySpace Opponent Models
     }
 
     public Bid getLastBid() {
@@ -336,7 +338,7 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
         }
 
         this.negotiationData.setTimeTaken(settings.getProgress().get(System.currentTimeMillis()));
-        this.negotiationData.multeVal();
+        this.negotiationData.changeEandMin();
     }
 
     /**
@@ -368,42 +370,5 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
         } catch (IOException e) {
             throw new RuntimeException("Failed to write persistent state to disk", e);
         }
-    }
-
-    private void updateModels(Action action)
-            throws InstantiationFailedException {
-        PartyId actor = action.getActor();
-        Map<PartyId, OpponentModel> updated = extendedOpponentModels(actor);
-        updated.put(actor, updated.get(actor).with(action, progress));
-        opponentModels = updated;
-    }
-
-    /**
-     * Get the current opponent model, extended with newparty if there is no
-     * model yet for newparty.
-     *
-     * @param newparty a possibly new party
-     * @return a (possibly new) opponentModels map
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws InstantiationFailedException
-     */
-    private Map<PartyId, OpponentModel> extendedOpponentModels(PartyId newparty)
-            throws InstantiationFailedException {
-        // check if this is new party
-        if (opponentModels.containsKey(newparty))
-            return opponentModels;
-
-        Map<PartyId, OpponentModel> newmodels = new HashMap<>(opponentModels);
-        OpponentModel newmodel;
-        try {
-            newmodel = opModelClass.getDeclaredConstructor().newInstance()
-                    .with(profile.getDomain(), profile.getReservationBid());
-        } catch (Exception e) {
-            throw new InstantiationFailedException(
-                    "Failed to instantiate " + opModelClass, e);
-        }
-        newmodels.put(newparty, newmodel);
-        return newmodels;
     }
 }

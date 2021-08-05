@@ -35,7 +35,7 @@ public class ExpandedStrategy {
     private Random r;
 
     private final boolean randBidFromCount = false;
-    private final boolean oppBidFromCount = true;
+    private final boolean oppBidFromCount = false;
     private final int bidChoiceCount = 3;
 
     public ExpandedStrategy(Settings settings, Profile profile, Reporter reporter) {
@@ -59,28 +59,7 @@ public class ExpandedStrategy {
         if(utilityGoal.compareTo(bestUtilFromOpp) < 0.0) {
             return new Offer(me, bestBidFromOpp);
         }
-        if(randBidFromCount) {
-            Bid randBid = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount)).get(r.nextInt(bidChoiceCount));
-            return new Offer(me, randBid);
-        }
-        if(oppBidFromCount) {
-            ImmutableList<Bid> bids = bidChooser.getCountBids(utilityGoal, BigInteger.valueOf(bidChoiceCount));
-            if(oppModel == null) {
-                return new Offer(me, bids.iterator().next());
-            }
 
-            Bid bestBidForOpp = null;
-            BigDecimal bestUtilForOpp = null;
-
-            for(Bid bid : bids) {
-                BigDecimal bidOppUtil = oppModel.getUtility(bid);
-                if(bestBidForOpp == null || bidOppUtil.compareTo(bestUtilForOpp) > 0.0) {
-                    bestBidForOpp = bid;
-                    bestUtilForOpp = bidOppUtil;
-                }
-            }
-            return new Offer(me, bestBidForOpp);
-        }
 
         Bid pickedBid = bidChooser.chooseBid(utilityGoal, BigDecimal.valueOf(max), utilityGoal, goalWeight, selfWeight, oppWeight, oppModel, exploreWeight, randomWeight);
         return new Offer(me, pickedBid);
@@ -142,6 +121,14 @@ public class ExpandedStrategy {
         }
     }
 
+    public void init3(Double learnedMin){
+        if(learnedMin == null){
+            this.min = getMin();
+        } else {
+            this.min = learnedMin;
+        }
+    }
+
     private void init(Settings settings, Profile profile, Reporter reporter) {
         this.settings = settings;
         this.me = settings.getID();
@@ -181,7 +168,7 @@ public class ExpandedStrategy {
     }
 
     protected Double getE() {
-        return settings.getParameters().getDouble("e", 0.03d, 0d, 1d);
+        return settings.getParameters().getDouble("e", MatrixAlienAgent.initial_E, 0d, 1d);
     }
 
     protected Double getK() {
@@ -189,7 +176,7 @@ public class ExpandedStrategy {
     }
 
     protected Double getMin() {
-        Double val = settings.getParameters().getDouble("min", null, 0d, 1d);
+        Double val = settings.getParameters().getDouble("min", MatrixAlienAgent.initial_min, 0d, 1d);
         if (val != null)
             return val;
         // val=null, try the reservation bid

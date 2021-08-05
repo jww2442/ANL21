@@ -3,6 +3,8 @@ package geniusweb.exampleparties.alienmatrixagent; // TODO: change name
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
+import java.awt.geom.Arc2D;
+
 /**
  * The class hold the negotiation data that is obtain during a negotiation
  * session. It will be saved to disk after the negotiation has finished. During
@@ -18,19 +20,21 @@ public class NegotiationData {
     private String opponentName;
 
     private Double eVal = 2.0e-8;
-    private Double timeTakenToAgree = -1.0;
+    private Double timeTakenToAgree = 0.0;
     private int numEncounters = 0;
+    private Double minVal = 0.23;
 
-    public void multeVal(){
-        if(this.agreementUtil >90.0) {
+    public void changeEandMin(){
+        if(this.agreementUtil >85.0) {
             ;
         }else if(this.agreementUtil > 0.0 && this.agreementUtil <= 90.0) {
             double timeLeft = 60 * (1.0 - timeTakenToAgree);
             for (int i = 0; i < timeLeft; i++) {
-                this.eVal *= 0.95;
+                this.eVal *= 0.9;
             }
-            for(int i = 0; i < numEncounters; i++){
-                this.eVal *= 1.005;
+            if(numEncounters < 6){
+                this.minVal = .6;
+                this.eVal = this.eVal/2;
             }
         } else if(this.agreementUtil == 0.0){
             this.eVal *= 10;
@@ -39,6 +43,25 @@ public class NegotiationData {
             }
         }
 
+        if (this.minVal < 0.4){
+            this.minVal = 0.4;
+        }
+        if(this.minVal > 0.7){
+            this.minVal = 0.7;
+        }
+        if(this.eVal > 0.1){
+            this.eVal = 0.1;
+        }
+        if(this.eVal < 0.00000000001){
+
+        }
+
+    }
+
+
+
+    public Double getMinVal(){
+        return this.minVal;
     }
 
     public void setNumEncounters(int num){
