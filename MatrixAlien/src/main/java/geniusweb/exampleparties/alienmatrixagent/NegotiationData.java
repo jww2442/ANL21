@@ -1,4 +1,4 @@
-package geniusweb.exampleparties.alienmatrixagent; // TODO: change name
+package geniusweb.exampleparties.alienmatrixagent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -24,36 +24,53 @@ public class NegotiationData {
     private int numEncounters = 0;
     private Double minVal = 0.23;
 
+    private static final double GOOD_AGREEMENT_UTIL = 0.850;
+    private static final double NO_AGREEMENT_UTIL = 0.001;
+    private static final double UTIL_NEAR_MIN_DISTANCE = 0.05;
+    private static final int EARLY_ROUND_E_INCREASE_COUNT = 5;
+
+    private static final double INCREASE_E_FACTOR = 10.0;
+    private static final double TINY_POINTLESS_JUST_TO_PROVE_A_POINT_ELECTRIC_BOOGALOO_LONGEST_CONSTANT_YOUVE_EVER_SEEN_INCREASE_E_FACTOR = 3.141592653589793238368343;
+    private static final double DECREASE_E_FACTOR = 0.631;
+    private static final double INCREASE_MIN_DELTA = 0.025;
+    private static final double DECREASE_MIN_DELTA = -0.05;
+
+    private static final double E_MINIMUM = 0.000000000001;
+    private static final double E_MAXIMUM = 0.1;
+    private static final double MIN_MINIMUM = 0.4;
+    private static final double MIN_MAXIMUM = 0.7;
+
     public void changeEandMin(){
-        if(this.agreementUtil >85.0) {
+        if(this.agreementUtil > GOOD_AGREEMENT_UTIL) {
             ;
-        }else if(this.agreementUtil > 0.0 && this.agreementUtil <= 90.0) {
-            double timeLeft = 60 * (1.0 - timeTakenToAgree);
-            for (int i = 0; i < timeLeft; i++) {
-                this.eVal *= 0.9;
+        }else if(this.agreementUtil > NO_AGREEMENT_UTIL && this.agreementUtil <= GOOD_AGREEMENT_UTIL) {
+            this.eVal *= DECREASE_E_FACTOR;
+
+            if((this.agreementUtil - this.minVal) < UTIL_NEAR_MIN_DISTANCE) {
+                this.minVal += INCREASE_MIN_DELTA;
             }
-            if(numEncounters < 6){
-                this.minVal = .6;
-                this.eVal = this.eVal/2;
-            }
-        } else if(this.agreementUtil == 0.0){
-            this.eVal *= 10;
-            for(int i = 0; i < numEncounters; i++){
-                this.eVal *= 1.005;
-            }
+
+        } else if(this.agreementUtil <= NO_AGREEMENT_UTIL){
+            this.eVal *= INCREASE_E_FACTOR;
+
+            this.minVal += DECREASE_MIN_DELTA;
         }
 
-        if (this.minVal < 0.4){
-            this.minVal = 0.4;
+        if(numEncounters == EARLY_ROUND_E_INCREASE_COUNT) {
+            this.eVal *= TINY_POINTLESS_JUST_TO_PROVE_A_POINT_ELECTRIC_BOOGALOO_LONGEST_CONSTANT_YOUVE_EVER_SEEN_INCREASE_E_FACTOR;
         }
-        if(this.minVal > 0.7){
-            this.minVal = 0.7;
-        }
-        if(this.eVal > 0.1){
-            this.eVal = 0.1;
-        }
-        if(this.eVal < 0.00000000001){
 
+        if (this.minVal < MIN_MINIMUM){
+            this.minVal = MIN_MINIMUM;
+        }
+        if(this.minVal > MIN_MAXIMUM){
+            this.minVal = MIN_MAXIMUM;
+        }
+        if(this.eVal > E_MAXIMUM){
+            this.eVal = E_MAXIMUM;
+        }
+        if(this.eVal < E_MINIMUM){
+            this.eVal = E_MAXIMUM;
         }
 
     }

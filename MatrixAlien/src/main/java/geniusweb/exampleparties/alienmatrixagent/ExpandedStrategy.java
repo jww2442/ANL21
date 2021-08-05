@@ -224,10 +224,10 @@ public class ExpandedStrategy {
         return settings.getParameters().getDouble("em", 0d, -1.0, 1.0);
     }
     protected Double getStartSigma() {
-        return settings.getParameters().getDouble("ss", 0d, 0d, 10.0);
+        return settings.getParameters().getDouble("ss", 0.01d, 0d, 10.0);
     }
     protected Double getEndSigma() {
-        return settings.getParameters().getDouble("es", 0d, 0d, 10.0);
+        return settings.getParameters().getDouble("es", 0.025d, 0d, 10.0);
     }
 
 

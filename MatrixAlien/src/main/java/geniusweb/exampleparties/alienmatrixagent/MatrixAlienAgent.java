@@ -32,7 +32,7 @@ import geniusweb.boa.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MatrixAlienAgent extends DefaultParty { // TODO: change name
+public class MatrixAlienAgent extends DefaultParty {
 
     private Bid lastReceivedBid = null;
     private PartyId me;
@@ -59,13 +59,14 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
 
     private final boolean doLearnE = true;
     private final boolean doLearnMin = true;
-    public static final Double initial_E = 1.0;
-    public static final Double initial_min = 0.4;
+    public static final Double initial_E = 0.00033;
+    public static final String initial_D = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+    public static final Double initial_min = 0.5;
 
-    public MatrixAlienAgent() { // TODO: change name
+    public MatrixAlienAgent() {
     }
 
-    public MatrixAlienAgent(Reporter reporter) { // TODO: change name
+    public MatrixAlienAgent(Reporter reporter) {
         super(reporter); // for debugging
         this.reporter = reporter;
     }
@@ -202,7 +203,7 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
                 }
 
                 // The info notifies us that it is our turn
-                //myTurn(); //TODO: My Turn now no longer necessary? Instead Call super.notifyChange(info)
+                //myTurn();
                 getConnection().send(getAction());
                 //END YOURTURN*************END YOURTURN**************END YOURTURN******************
             } else if (info instanceof Finished) {
@@ -278,12 +279,15 @@ public class MatrixAlienAgent extends DefaultParty { // TODO: change name
     /** Provide [vectorized_songs[i:i+batch_size] for i in idx]a description of the agent */
     @Override
     public String getDescription() {
-        return "This is the example party of ANL 2021. It can handle the Learn protocol and learns simple characteristics of the opponent.";
+        String alienMatrixMatrixAlienMatrixAlienAlienMatrixMatrixAlienAlienMatrixAlienMatrixMatrixAlienMatrixAlienAlienMatrixAlienMatrixMatrixAlienAlienMatrixMatrixAlienMatrixAlienAlienMatrix =
+                "This is the University of Tulsa MASTERS submission for the 2021 ANL competition. " +
+                "It can adapt its boulware constant and min value depending on its success during previous rounds of negotiation. It also has a super cool name.";
+        return alienMatrixMatrixAlienMatrixAlienAlienMatrixMatrixAlienAlienMatrixAlienMatrixMatrixAlienMatrixAlienAlienMatrixAlienMatrixMatrixAlienAlienMatrixMatrixAlienMatrixAlienAlienMatrix;
     }
 
     protected Class<? extends OpponentModel> getOpponentModel(Settings settings)
             throws InstantiationFailedException {
-        return FrequencyOpponentModel.class; //TODO: Choose an Opponent Model
+        return FrequencyOpponentModel.class;
         //return TimeIndependentFreqModel.class;
         //return SmallTimeIndependentFreqModel.class;
     }

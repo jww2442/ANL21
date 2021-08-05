@@ -1,4 +1,4 @@
-package geniusweb.exampleparties.alienmatrixagent; // TODO: change name
+package geniusweb.exampleparties.alienmatrixagent;
 
 import java.util.HashMap;
 import java.util.Map;
